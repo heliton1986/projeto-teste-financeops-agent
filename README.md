@@ -137,9 +137,13 @@ spec/
   02-define.md
   03-design.md
 contracts/
-  lancamento_contract.md
-  inconsistencia_contract.md
-  relatorio_contract.md
+  lancamento_contract.py
+  inconsistencia_contract.py
+  relatorio_contract.py
+kb/
+  supabase/     (index.md + quick-reference.md)
+  pydantic/     (index.md + quick-reference.md)
+  anthropic/    (index.md + quick-reference.md)
 src/
   agents/
     orchestrator.py
@@ -150,10 +154,16 @@ src/
   db/
     models.py
     connection.py
+    audit.py
 execution/
   run_onboarding_flow.py
   run_flow.py
 tests/
+  fixtures/
+    lancamentos_fixture.csv
+  test_ingestion.py
+  test_detector.py
+  test_validator.py
 progress/
   PROGRESS.md
   VALIDATION_STATUS.md
