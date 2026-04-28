@@ -133,6 +133,16 @@ def fase_1_bootstrap(runner: RunnerNarrativo) -> None:
                 raise RuntimeError(f"tabelas ausentes: {faltando}")
 
 
+def _validar_contrato(session, run_id, instancia, nome_agente: str) -> None:
+    from src.agents.validator_agent import ValidatorAgent
+    from src.db.audit import registrar
+    vr = ValidatorAgent().validar_instancia(instancia)
+    registrar(session, run_id, "ValidatorAgent", f"validacao_{type(instancia).__name__}",
+              "ok" if vr.valido else "falhou", {"erros": vr.erros, "avisos": vr.avisos})
+    if not vr.valido:
+        raise RuntimeError(f"Contrato {vr.contrato_validado} invalido apos {nome_agente}: {vr.erros}")
+
+
 def fase_2_ingestao(runner: RunnerNarrativo, csv_path: str, session) -> "LancamentosNormalizados":  # type: ignore
     with runner.fase(2, "Ingestao e Normalizacao"):
         log("  [IngestionAgent]", "lendo CSV...")
@@ -149,6 +159,9 @@ def fase_2_ingestao(runner: RunnerNarrativo, csv_path: str, session) -> "Lancame
                 "periodo_inicio": str(resultado.periodo_inicio),
                 "periodo_fim": str(resultado.periodo_fim),
             })
+
+        with _GateContext("Validacao Contrato"):
+            _validar_contrato(session, resultado.run_id, resultado, "IngestionAgent")
 
         log("  [IngestionAgent]", f"{resultado.total_lancamentos} lancamentos normalizados")
         return resultado
@@ -170,6 +183,9 @@ def fase_3_deteccao(runner: RunnerNarrativo, lancamentos_norm, session) -> "Inco
                 "tipos": [i.tipo for i in resultado.inconsistencias],
             })
 
+        with _GateContext("Validacao Contrato"):
+            _validar_contrato(session, lancamentos_norm.run_id, resultado, "DetectorAgent")
+
         log("  [DetectorAgent]", f"{resultado.total_inconsistencias} inconsistencias encontradas")
         return resultado
 
@@ -189,6 +205,9 @@ def fase_4_relatorio(runner: RunnerNarrativo, lancamentos_norm, inconsistencias,
                 "total_lancamentos": resultado.total_lancamentos,
                 "total_inconsistencias": resultado.total_inconsistencias,
             })
+
+        with _GateContext("Validacao Contrato"):
+            _validar_contrato(session, lancamentos_norm.run_id, resultado, "ReporterAgent")
 
         log("  [ReporterAgent]", f"status: {resultado.status_sistema}")
         return resultado

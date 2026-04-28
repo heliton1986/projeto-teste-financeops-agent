@@ -1,4 +1,4 @@
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from contracts.inconsistencia_contract import InconsistenciasReport
 from contracts.lancamento_contract import LancamentosNormalizados
@@ -14,6 +14,11 @@ class ValidatorAgent:
 
     def validar_relatorio(self, dados: dict) -> ValidationResult:
         return self._validar(dados, RelatorioExecutivo, "RelatorioExecutivo")
+
+    def validar_instancia(self, instancia: BaseModel) -> ValidationResult:
+        """Revalida instancia Pydantic ja criada — defesa em profundidade entre fases."""
+        nome = type(instancia).__name__
+        return self._validar(instancia.model_dump(), type(instancia), nome)
 
     def _validar(self, dados: dict, modelo, nome: str) -> ValidationResult:
         try:
