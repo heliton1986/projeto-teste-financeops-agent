@@ -50,10 +50,10 @@
 |-------|--------|---------|
 | RelatorioExecutivo valido | APROVADO | Pydantic validou sem erro |
 | status_sistema != bloqueado | APROVADO | status: pronto |
-| audit_log tem entradas do run | pendente | nao implementado ainda (Fase 2+) |
+| audit_log tem entradas do run | APROVADO | 3 entradas: IngestionAgent, DetectorAgent, ReporterAgent |
 
 **Comando:** `python execution/run_flow.py --fase 4`
-**Resultado:** APROVADO — 2026-04-28 16:14
+**Resultado:** APROVADO — 2026-04-28 16:43
 
 ---
 

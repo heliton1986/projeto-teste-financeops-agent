@@ -133,43 +133,62 @@ def fase_1_bootstrap(runner: RunnerNarrativo) -> None:
                 raise RuntimeError(f"tabelas ausentes: {faltando}")
 
 
-def fase_2_ingestao(runner: RunnerNarrativo, csv_path: str) -> "LancamentosNormalizados":  # type: ignore
+def fase_2_ingestao(runner: RunnerNarrativo, csv_path: str, session) -> "LancamentosNormalizados":  # type: ignore
     with runner.fase(2, "Ingestao e Normalizacao"):
         log("  [IngestionAgent]", "lendo CSV...")
 
         with _GateContext("Lancamentos Normalizados"):
             from src.agents.ingestion_agent import IngestionAgent
+            from src.db.audit import registrar
             agent = IngestionAgent()
             resultado = agent.processar(csv_path)
             assert resultado.total_lancamentos > 0, "nenhum lancamento valido"
+            registrar(session, resultado.run_id, "IngestionAgent", "ingestao_csv", "ok", {
+                "total_lancamentos": resultado.total_lancamentos,
+                "erros_ingestao": len(resultado.inconsistencias_ingestao),
+                "periodo_inicio": str(resultado.periodo_inicio),
+                "periodo_fim": str(resultado.periodo_fim),
+            })
 
         log("  [IngestionAgent]", f"{resultado.total_lancamentos} lancamentos normalizados")
         return resultado
 
 
-def fase_3_deteccao(runner: RunnerNarrativo, lancamentos_norm) -> "InconsistenciasReport":  # type: ignore
+def fase_3_deteccao(runner: RunnerNarrativo, lancamentos_norm, session) -> "InconsistenciasReport":  # type: ignore
     with runner.fase(3, "Deteccao de Inconsistencias"):
-        log("  [DetectorAgent]", "analisando lancamentos...")
+        log("  [DetectorAgent]", "analisando lancamentos com claude-sonnet-4-6...")
 
         with _GateContext("Inconsistencias Report"):
             from src.agents.detector_agent import DetectorAgent
+            from src.db.audit import registrar
             agent = DetectorAgent()
             resultado = agent.detectar(lancamentos_norm)
             assert resultado.total_analisados > 0, "nenhum lancamento analisado"
+            registrar(session, lancamentos_norm.run_id, "DetectorAgent", "deteccao_inconsistencias", "ok", {
+                "total_analisados": resultado.total_analisados,
+                "total_inconsistencias": resultado.total_inconsistencias,
+                "tipos": [i.tipo for i in resultado.inconsistencias],
+            })
 
         log("  [DetectorAgent]", f"{resultado.total_inconsistencias} inconsistencias encontradas")
         return resultado
 
 
-def fase_4_relatorio(runner: RunnerNarrativo, lancamentos_norm, inconsistencias) -> "RelatorioExecutivo":  # type: ignore
+def fase_4_relatorio(runner: RunnerNarrativo, lancamentos_norm, inconsistencias, session) -> "RelatorioExecutivo":  # type: ignore
     with runner.fase(4, "Relatorio Executivo"):
         log("  [ReporterAgent]", "gerando relatorio...")
 
         with _GateContext("Relatorio Executivo"):
             from src.agents.reporter_agent import ReporterAgent
+            from src.db.audit import registrar
             agent = ReporterAgent()
             resultado = agent.gerar(lancamentos_norm, inconsistencias)
             assert resultado.status_sistema != "bloqueado", "relatorio em estado bloqueado"
+            registrar(session, lancamentos_norm.run_id, "ReporterAgent", "geracao_relatorio", "ok", {
+                "status_sistema": resultado.status_sistema,
+                "total_lancamentos": resultado.total_lancamentos,
+                "total_inconsistencias": resultado.total_inconsistencias,
+            })
 
         log("  [ReporterAgent]", f"status: {resultado.status_sistema}")
         return resultado
@@ -192,17 +211,19 @@ def main() -> None:
     try:
         fase_1_bootstrap(runner)
 
-        lancamentos_norm = None
-        inconsistencias = None
+        from src.db.connection import get_session
+        with get_session() as session:
+            lancamentos_norm = None
+            inconsistencias = None
 
-        if fase_max >= 2:
-            lancamentos_norm = fase_2_ingestao(runner, args.csv)
+            if fase_max >= 2:
+                lancamentos_norm = fase_2_ingestao(runner, args.csv, session)
 
-        if fase_max >= 3 and lancamentos_norm:
-            inconsistencias = fase_3_deteccao(runner, lancamentos_norm)
+            if fase_max >= 3 and lancamentos_norm:
+                inconsistencias = fase_3_deteccao(runner, lancamentos_norm, session)
 
-        if fase_max >= 4 and lancamentos_norm and inconsistencias:
-            fase_4_relatorio(runner, lancamentos_norm, inconsistencias)
+            if fase_max >= 4 and lancamentos_norm and inconsistencias:
+                fase_4_relatorio(runner, lancamentos_norm, inconsistencias, session)
 
     except BlockingError as e:
         print(f"\n  BLOQUEIO REAL: {e}", flush=True)
