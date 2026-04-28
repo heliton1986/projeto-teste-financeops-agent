@@ -1,0 +1,45 @@
+project: FinanceOps Agent
+version: "1.0"
+
+eixo: hibrido
+# interativo: humano + LLM via Claude Code — editar directives, aprovar fases, revisar contratos
+# programatico: OrchestratorAgent coordenando subagentes via Python — sem intervencao humana
+
+agentes:
+  OrchestratorAgent:
+    arquivo: src/agents/orchestrator.py
+    usa_llm: false
+    modelo: null
+    justificativa: logica deterministica de roteamento
+
+  IngestionAgent:
+    arquivo: src/agents/ingestion_agent.py
+    usa_llm: false
+    modelo: null
+    justificativa: leitura e normalizacao de CSV — sem ambiguidade semantica
+
+  DetectorAgent:
+    arquivo: src/agents/detector_agent.py
+    usa_llm: true
+    modelo: claude-sonnet-4-6
+    justificativa: raciocinio sobre inconsistencias semanticas ambiguas
+    mascaramento_obrigatorio: true
+    max_tokens: 1024
+    temperatura: 0
+
+  ValidatorAgent:
+    arquivo: src/agents/validator_agent.py
+    usa_llm: false
+    modelo: null
+    justificativa: validacao Pydantic — deterministica
+
+  ReporterAgent:
+    arquivo: src/agents/reporter_agent.py
+    usa_llm: false
+    modelo: null
+    justificativa: agregacao de dados — sem geracao de linguagem natural (v1)
+
+politica:
+  nunca_usar_llm_sem_mascaramento: true
+  temperatura_agentes_criticos: 0
+  modelo_padrao_llm: claude-sonnet-4-6

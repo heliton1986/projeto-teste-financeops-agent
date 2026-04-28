@@ -1,0 +1,11 @@
+data,descricao,valor,categoria,centro_custo,origem
+2026-03-01,Pagamento fornecedor ABC,5000.00,Fornecedores,TI,csv
+2026-03-02,Assinatura software licenca,1200.50,Tecnologia,TI,csv
+2026-03-03,Reembolso viagem Pedro,450.00,Despesas Pessoal,RH,csv
+2026-03-04,Pagamento fornecedor ABC,5000.00,Fornecedores,TI,csv
+2026-03-05,Material escritorio,89.90,Administrativo,ADM,csv
+2026-03-06,teste,10.00,Outros,ADM,csv
+2026-03-07,,200.00,Servicos,TI,csv
+2026-03-08,Consultoria juridica mensal,15000.00,Juridico,JUR,csv
+2026-03-10,Energia eletrica sede,3200.00,Infraestrutura,ADM,csv
+2026-03-15,Folha pagamento marco,85000.00,Pessoal,RH,erp
