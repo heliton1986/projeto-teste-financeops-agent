@@ -12,7 +12,7 @@
 | Anthropic API key valida | APROVADO | claude-haiku-4-5 ping ok |
 
 **Comando:** `python execution/run_onboarding_flow.py`
-**Resultado:** 5/5 APROVADO — 2026-04-28
+**Resultado:** 5/5 APROVADO — 2026-04-28 16:06
 
 ---
 
@@ -25,7 +25,7 @@
 | total_lancamentos > 0 | APROVADO | 9 lancamentos normalizados (1 rejeitado: descricao ausente) |
 
 **Comando:** `python execution/run_flow.py --fase 2`
-**Resultado:** APROVADO — 2026-04-28
+**Resultado:** APROVADO — 2026-04-28 16:09
 
 ---
 
@@ -38,7 +38,7 @@
 | Mascaramento aplicado | APROVADO | valores enviados ao LLM como faixas (ex: 1k-10k) |
 
 **Comando:** `python execution/run_flow.py --fase 3`
-**Resultado:** APROVADO — 2026-04-28
+**Resultado:** APROVADO — 2026-04-28 16:13
 
 **Nota:** DetectorAgent encontra entre 1-2 inconsistencias por run (1 duplicata por regra fixa + 1 semantica via LLM — variacao esperada mesmo com temperature=0).
 
@@ -53,7 +53,7 @@
 | audit_log tem entradas do run | pendente | nao implementado ainda (Fase 2+) |
 
 **Comando:** `python execution/run_flow.py --fase 4`
-**Resultado:** APROVADO — 2026-04-28
+**Resultado:** APROVADO — 2026-04-28 16:14
 
 ---
 

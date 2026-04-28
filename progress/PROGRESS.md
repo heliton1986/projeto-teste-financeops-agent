@@ -3,16 +3,16 @@
 ## Status atual
 
 **Fase:** v1 completa — todos os gates aprovados
-**Data:** 2026-04-28
+**Data:** 2026-04-28 16:14
 
 ## Fases
 
 | Fase | Nome | Status | Gate | Data |
 |------|------|--------|------|------|
-| 1 | Estrutura base + onboarding | CONCLUIDA | APROVADO | 2026-04-28 |
-| 2 | Ingestao de CSV | CONCLUIDA | APROVADO | 2026-04-28 |
-| 3 | Deteccao de inconsistencias | CONCLUIDA | APROVADO | 2026-04-28 |
-| 4 | Relatorio executivo | CONCLUIDA | APROVADO | 2026-04-28 |
+| 1 | Estrutura base + onboarding | CONCLUIDA | APROVADO | 2026-04-28 16:06 |
+| 2 | Ingestao de CSV | CONCLUIDA | APROVADO | 2026-04-28 16:09 |
+| 3 | Deteccao de inconsistencias | CONCLUIDA | APROVADO | 2026-04-28 16:13 |
+| 4 | Relatorio executivo | CONCLUIDA | APROVADO | 2026-04-28 16:14 |
 | 5 | API FastAPI | nao iniciada | — | — |
 | 6 | UI Streamlit | nao iniciada | — | — |
 
