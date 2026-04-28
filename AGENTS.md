@@ -4,14 +4,6 @@
 
 Define como a LLM deve se comportar neste projeto. Ler antes de qualquer implementacao.
 
-## Inicio de sessao — ler nesta ordem
-
-1. Este `AGENTS.md`
-2. `kb/index.md` — estado atual, proximos passos, fontes de verdade
-3. `kb/domain.md` — agentes, modelos, stack, fluxo de execucao
-4. `kb/rules.md` — regras R01-R14 e contratos por agente
-5. Arquivos diretamente afetados pela tarefa
-
 ## Identidade do sistema
 
 - **Nome:** FinanceOps Agent
