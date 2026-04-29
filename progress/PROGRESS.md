@@ -2,8 +2,8 @@
 
 ## Status atual
 
-**Fase:** v1 completa — todos os gates aprovados
-**Data:** 2026-04-28 18:00
+**Fase:** v2 completa — fases 5-6 aprovadas, CI/coverage ativo
+**Data:** 2026-04-29 00:00
 
 ## Fases
 
@@ -13,10 +13,11 @@
 | 2 | Ingestao de CSV | CONCLUIDA | APROVADO | 2026-04-28 16:09 |
 | 3 | Deteccao de inconsistencias | CONCLUIDA | APROVADO | 2026-04-28 16:13 |
 | 4 | Relatorio executivo | CONCLUIDA | APROVADO | 2026-04-28 16:14 |
-| 5 | API FastAPI | nao iniciada | — | — |
-| 6 | UI Streamlit | nao iniciada | — | — |
+| CI | CI + Coverage 80% | CONCLUIDA | APROVADO | 2026-04-29 10:00 |
+| 5 | API FastAPI | CONCLUIDA | APROVADO | 2026-04-29 10:30 |
+| 6 | UI Streamlit | CONCLUIDA | APROVADO | 2026-04-29 11:00 |
 
-## O que foi criado (v1)
+## O que foi criado (v2)
 
 - [x] README.md, AGENTS.md
 - [x] directives/domain.md, business-rules.md, output-contracts.md
@@ -25,28 +26,31 @@
 - [x] model_routing.yaml, .env.example, requirements.txt
 - [x] src/db/models.py, connection.py, audit.py
 - [x] src/agents/ingestion_agent.py, detector_agent.py, validator_agent.py, reporter_agent.py, orchestrator.py
-- [x] execution/run_onboarding_flow.py, run_flow.py
-- [x] tests/fixtures/lancamentos_fixture.csv, test_ingestion.py, test_detector.py, test_validator.py
+- [x] execution/run_onboarding_flow.py, run_flow.py, run_api.py, run_ui.py
+- [x] src/api/__init__.py, main.py
+- [x] src/ui/__init__.py, app.py, formatters.py
+- [x] .github/workflows/tests.yml, .coveragerc
+- [x] tests/test_ingestion.py, test_detector.py, test_validator.py, test_reporter.py, test_orchestrator.py, test_api.py, test_ui_formatters.py
 - [x] kb/supabase/, kb/pydantic/, kb/anthropic/
 - [x] progress/PROGRESS.md, VALIDATION_STATUS.md
 
-## Padroes implementados (v1)
+## Padroes implementados (v2)
 
 - ValidatorAgent como gate entre fases — revalida contrato Pydantic antes de passar ao proximo agente
 - Sessao DB unica no runner — run_flow.py abre sessao e passa para todas as fases
 - audit_log por agente — INSERT-only, registrado apos cada fase
-- Testes offline — 18/18 passando sem DB, sem LLM, em < 5s
+- Testes offline — 44/44 passando sem DB, sem LLM, em < 5s — coverage 87.61%
+- CI: GitHub Actions bloqueia merge se testes falharem ou coverage < 80%
 - kb/ de ferramentas — supabase, pydantic, anthropic com quick-reference
+- API REST: POST /processar (upload CSV) + GET /health via FastAPI
+- UI Web: upload CSV, metricas, tabela inconsistencias, download JSON via Streamlit
+- formatters.py separado do app.py — logica de display testada offline (100% coverage)
 
 ## Proximos passos
 
-- [ ] CI: `.github/workflows/tests.yml` — pytest a cada push, bloqueia merge se falhar
-- [ ] Coverage: `pytest --cov=src --cov-report=term` — minimo 80%
 - [ ] CrewAI: substituir chamadas diretas entre agentes (pos-treinamento dia 3/4)
 - [ ] Chainlit: interface de chat para o analista financeiro
 - [ ] LangFuse: observabilidade das chamadas LLM do DetectorAgent
-- [ ] Fase 5: API FastAPI — endpoint POST /processar com upload CSV
-- [ ] Fase 6: UI Streamlit — upload CSV, visualizar inconsistencias, baixar relatorio
 
 ## Decisoes tecnicas registradas
 
