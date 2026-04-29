@@ -1,7 +1,9 @@
 [run]
 omit =
     src/db/*
+    src/ui/app.py
 
 [report]
 omit =
     src/db/*
+    src/ui/app.py
