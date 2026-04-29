@@ -1,0 +1,7 @@
+[run]
+omit =
+    src/db/*
+
+[report]
+omit =
+    src/db/*
