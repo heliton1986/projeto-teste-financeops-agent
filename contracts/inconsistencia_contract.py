@@ -12,6 +12,7 @@ TipoInconsistencia = Literal[
     "valor_irrisorio_suspeito",
     "descricao_suspeita",
     "centro_custo_desconhecido",
+    "inconsistencia_semantica",
 ]
 
 Severidade = Literal["critica", "alta", "media", "baixa"]

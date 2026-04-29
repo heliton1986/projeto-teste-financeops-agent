@@ -124,6 +124,7 @@ class DetectorAgent:
         )
 
         resultado = []
+        print(f"[DetectorAgent] LLM chamado com {len(lancamentos)} candidatos", flush=True)
         for tentativa in range(3):
             try:
                 response = self.client.messages.create(
@@ -133,9 +134,11 @@ class DetectorAgent:
                     messages=[{"role": "user", "content": prompt}],
                 )
                 texto = response.content[0].text
+                print(f"[DetectorAgent] LLM resposta: {texto[:200]!r}", flush=True)
                 resultado = self._parsear_resposta_llm(texto, lancamentos)
                 break
-            except Exception:
+            except Exception as e:
+                print(f"[DetectorAgent] LLM erro tentativa {tentativa+1}: {e}", flush=True)
                 if tentativa == 2:
                     pass
         return resultado
@@ -143,17 +146,28 @@ class DetectorAgent:
     def _parsear_resposta_llm(self, texto: str, lancamentos: list[Lancamento]) -> list[Inconsistencia]:
         ids_map = {str(l.id): l for l in lancamentos}
         resultado = []
+        uuid_pattern = re.compile(
+            r"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\|([^|]+)\|(.+)",
+            re.IGNORECASE,
+        )
         for linha in texto.strip().splitlines():
-            partes = linha.split("|")
-            if len(partes) >= 3:
-                lid = partes[0].strip().replace("id:", "")
+            match = uuid_pattern.search(linha)
+            if match:
+                lid, tipo, descricao = match.group(1), match.group(2).strip(), match.group(3).strip().strip("*`")
                 if lid in ids_map:
                     l = ids_map[lid]
+                    TIPOS_VALIDOS = {
+                        "duplicata_suspeita", "campo_ausente", "formato_invalido",
+                        "valor_alto_suspeito", "valor_irrisorio_suspeito",
+                        "descricao_suspeita", "centro_custo_desconhecido", "inconsistencia_semantica",
+                    }
+                    tipo_normalizado = re.sub(r"[^a-zA-Z0-9_]", "_", tipo).strip("_")
+                    tipo_limpo = tipo_normalizado if tipo_normalizado in TIPOS_VALIDOS else "inconsistencia_semantica"
                     resultado.append(Inconsistencia(
                         lancamento_id=l.id,
-                        tipo="descricao_suspeita",
+                        tipo=tipo_limpo,
                         severidade="media",
-                        descricao=partes[2].strip(),
+                        descricao=descricao,
                         valor_mascarado=_mascarar_valor(l.valor),
                     ))
         return resultado
