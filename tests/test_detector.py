@@ -149,3 +149,88 @@ def test_detecta_valor_irrisorio():
     assert len(resultado) == 1
     assert resultado[0].tipo == "valor_irrisorio_suspeito"
     assert resultado[0].severidade == "media"
+
+
+# --- mock tests: lógica de controle (CI-safe, sem API) ---
+
+from unittest.mock import MagicMock, patch
+
+
+def _agent_mockado():
+    with patch("src.agents.detector_agent.anthropic.Anthropic"), \
+         patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+        return DetectorAgent()
+
+
+def test_detector_init_instancia_cliente():
+    with patch("src.agents.detector_agent.anthropic.Anthropic") as mock_cls, \
+         patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+        agent = DetectorAgent()
+        mock_cls.assert_called_once()
+        assert agent.client is mock_cls.return_value
+
+
+def test_detectar_chama_llm_quando_ha_candidatos():
+    agent = _agent_mockado()
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text="")]
+    agent.client.messages.create.return_value = mock_response
+
+    resultado = agent.detectar(_resultado([_lancamento()]))
+
+    agent.client.messages.create.assert_called_once()
+    assert resultado.total_analisados == 1
+
+
+def test_detectar_nao_chama_llm_quando_todos_criticos():
+    agent = _agent_mockado()
+    l1 = _lancamento()
+    l2 = _lancamento()  # mesmo data/desc/valor/centro_custo → duplicata critica
+    agent.detectar(_resultado([l1, l2]))
+    agent.client.messages.create.assert_not_called()
+
+
+def test_analisar_com_llm_retorna_inconsistencia():
+    agent = _agent_mockado()
+    l = _lancamento()
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text=f"id:{l.id}|inconsistencia_semantica|Descricao incompativel")]
+    agent.client.messages.create.return_value = mock_response
+
+    resultado = agent._analisar_com_llm([l])
+
+    assert len(resultado) == 1
+    assert resultado[0].tipo == "inconsistencia_semantica"
+    assert resultado[0].lancamento_id == l.id
+
+
+def test_analisar_com_llm_resposta_sem_inconsistencias():
+    agent = _agent_mockado()
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text="Nenhuma inconsistencia encontrada.")]
+    agent.client.messages.create.return_value = mock_response
+
+    resultado = agent._analisar_com_llm([_lancamento()])
+    assert resultado == []
+
+
+def test_analisar_com_llm_todas_tentativas_falham():
+    agent = _agent_mockado()
+    agent.client.messages.create.side_effect = Exception("API error")
+
+    resultado = agent._analisar_com_llm([_lancamento()])
+
+    assert resultado == []
+    assert agent.client.messages.create.call_count == 3
+
+
+def test_analisar_com_llm_sucesso_na_segunda_tentativa():
+    agent = _agent_mockado()
+    l = _lancamento()
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text="")]
+    agent.client.messages.create.side_effect = [Exception("timeout"), mock_response]
+
+    agent._analisar_com_llm([l])
+
+    assert agent.client.messages.create.call_count == 2

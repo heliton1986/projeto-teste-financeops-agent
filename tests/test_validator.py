@@ -70,3 +70,28 @@ def test_validar_lancamentos_via_dict_invalido():
     vr = ValidatorAgent().validar_lancamentos({})
     assert vr.valido is False
     assert len(vr.erros) > 0
+
+
+def test_validar_inconsistencias_via_dict():
+    run_id = uuid4()
+    dados = _inconsistencias_report(run_id).model_dump()
+    vr = ValidatorAgent().validar_inconsistencias(dados)
+    assert vr.valido is True
+    assert vr.contrato_validado == "InconsistenciasReport"
+
+
+def test_validar_relatorio_via_dict():
+    run_id = uuid4()
+    relatorio = RelatorioExecutivo(
+        run_id=run_id,
+        periodo="2026-03-01 a 2026-03-31",
+        total_lancamentos=1,
+        valor_total=Decimal("100.00"),
+        total_inconsistencias=0,
+        inconsistencias_por_severidade={},
+        inconsistencias=[],
+        status_sistema="pronto",
+    )
+    vr = ValidatorAgent().validar_relatorio(relatorio.model_dump())
+    assert vr.valido is True
+    assert vr.contrato_validado == "RelatorioExecutivo"

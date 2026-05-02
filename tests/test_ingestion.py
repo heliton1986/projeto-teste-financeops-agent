@@ -66,3 +66,13 @@ def test_ingestao_csv_todo_invalido(tmp_path):
     agent = IngestionAgent()
     with pytest.raises(RuntimeError, match="Nenhum lancamento valido"):
         agent.processar(str(csv))
+
+
+def test_ingestao_rejeita_valor_invalido(tmp_path):
+    csv = tmp_path / "test.csv"
+    csv.write_text(f"data,descricao,valor,categoria,centro_custo,origem\n{LINHA_VALIDA}\n2026-03-01,Teste,abc,Cat,CC,csv\n")
+    agent = IngestionAgent()
+    resultado = agent.processar(str(csv))
+    assert resultado.total_lancamentos == 1
+    assert len(resultado.inconsistencias_ingestao) == 1
+    assert "valor" in resultado.inconsistencias_ingestao[0].motivo
